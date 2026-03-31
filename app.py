@@ -3,7 +3,8 @@ import pymysql
 import boto3
 from datetime import datetime, timedelta
 import os
-from dotenv import load_dotenv  # [추가] dotenv 라이브러리 임포트
+from dotenv import load_dotenv
+from flask_cors import CORS# [추가] dotenv 라이브러리 임포트
 
 # [추가] .env 파일의 내용을 환경변수로 불러오기
 load_dotenv() 
@@ -19,6 +20,7 @@ db_config = {
 }
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True)
 def init_db():
     
     # DB 이름 없이 연결 (DB를 생성해야 하므로)
