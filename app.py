@@ -8,8 +8,19 @@ from dotenv import load_dotenv  # [추가] dotenv 라이브러리 임포트
 # [추가] .env 파일의 내용을 환경변수로 불러오기
 load_dotenv() 
 
+# RDS 연결 설정 (직접 적힌 값들 제거)
+db_config = {
+    'host': os.getenv('DB_HOST'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASS'),
+#    'db': 'board_db',
+    'charset': 'utf8mb4',
+    'cursorclass': pymysql.cursors.DictCursor
+}
+
 app = Flask(__name__)
 def init_db():
+    
     # DB 이름 없이 연결 (DB를 생성해야 하므로)
     conn = pymysql.connect(
         host=os.getenv('DB_HOST'),
@@ -56,21 +67,13 @@ def init_db():
 # 앱 시작 시 DB 초기화 실행
 init_db()
 
-# 기존 API 함수들에서 사용할 때는 board_db를 명시하도록 db_config 업데이트
 db_config['db'] = 'board_db'
+
+# 기존 API 함수들에서 사용할 때는 board_db를 명시하도록 db_config 업데이트
 # [수정] 직접 입력 대신 os.getenv 사용
 app.secret_key = os.getenv('SECRET_KEY') 
 app.permanent_session_lifetime = timedelta(days=7)
 
-# RDS 연결 설정 (직접 적힌 값들 제거)
-db_config = {
-    'host': os.getenv('DB_HOST'),
-    'user': os.getenv('DB_USER'),
-    'password': os.getenv('DB_PASS'),
-#    'db': 'board_db',
-    'charset': 'utf8mb4',
-    'cursorclass': pymysql.cursors.DictCursor
-}
 
 # AWS S3 설정 (버킷명과 리전은 보안값이 아니므로 유지해도 되지만, 키값은 제거)
 S3_BUCKET = 'niha5ma-storage-904053119728-final'
