@@ -1,0 +1,6 @@
+flask
+pymysql
+boto3
+flask-cors
+python-dotenv
+gunicorn
