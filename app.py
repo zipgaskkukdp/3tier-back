@@ -9,7 +9,55 @@ from dotenv import load_dotenv  # [추가] dotenv 라이브러리 임포트
 load_dotenv() 
 
 app = Flask(__name__)
+def init_db():
+    # DB 이름 없이 연결 (DB를 생성해야 하므로)
+    conn = pymysql.connect(
+        host=os.getenv('DB_HOST'),
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASS'),
+        charset='utf8mb4'
+    )
+    try:
+        with conn.cursor() as cursor:
+            # 1. 데이터베이스 생성
+            cursor.execute("CREATE DATABASE IF NOT EXISTS board_db;")
+            
+            # 2. 생성한 DB 선택
+            cursor.execute("USE board_db;")
 
+            # 3. 사용자 테이블 생성
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    withdraw_password VARCHAR(255) NOT NULL
+                );
+            """)
+
+            # 4. 게시글 테이블 생성
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS posts (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    title VARCHAR(255) NOT NULL,
+                    content TEXT,
+                    author VARCHAR(50),
+                    image_url VARCHAR(500),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+        conn.commit()
+        print("✅ 데이터베이스 및 테이블 초기화 완료!")
+    except Exception as e:
+        print(f"❌ DB 초기화 중 에러 발생: {e}")
+    finally:
+        conn.close()
+
+# 앱 시작 시 DB 초기화 실행
+init_db()
+
+# 기존 API 함수들에서 사용할 때는 board_db를 명시하도록 db_config 업데이트
+db_config['db'] = 'board_db'
 # [수정] 직접 입력 대신 os.getenv 사용
 app.secret_key = os.getenv('SECRET_KEY') 
 app.permanent_session_lifetime = timedelta(days=7)
@@ -19,7 +67,7 @@ db_config = {
     'host': os.getenv('DB_HOST'),
     'user': os.getenv('DB_USER'),
     'password': os.getenv('DB_PASS'),
-    'db': 'board_db',
+#    'db': 'board_db',
     'charset': 'utf8mb4',
     'cursorclass': pymysql.cursors.DictCursor
 }
