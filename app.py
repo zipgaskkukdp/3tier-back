@@ -20,7 +20,8 @@ db_config = {
 }
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+# CORS(app, supports_credentials=True)
+CORS(app, resources={r"/api/*": {"origins": "https://niha5ma.store"}}, supports_credentials=True)
 def init_db():
     
     # DB 이름 없이 연결 (DB를 생성해야 하므로)
