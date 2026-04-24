@@ -239,6 +239,47 @@ def delete_post(post_id):
     finally:
         conn.close()
 
+# app.py의 기존 코드 7번(삭제) 아래에 추가하세요.   -> 0424 게시글 수정 가능하도록 변경
+
+# 7-1. 게시물 수정 (PUT)
+@app.route('/api/posts/<int:post_id>', methods=['PUT'])
+def update_post(post_id):
+    if 'username' not in session:
+        return jsonify({"error": "로그인이 필요합니다."}), 401
+    
+    data = request.get_json()
+    new_title = data.get('title')
+    new_content = data.get('content')
+    
+    if not new_title or not new_content:
+        return jsonify({"error": "제목과 내용을 모두 입력해주세요."}), 400
+
+    conn = pymysql.connect(**db_config)
+    try:
+        with conn.cursor() as cursor:
+            # 1. 작성자 확인
+            cursor.execute("SELECT author FROM posts WHERE id = %s", (post_id,))
+            post = cursor.fetchone()
+            
+            if not post:
+                return jsonify({"error": "게시물을 찾을 수 없습니다."}), 404
+            
+            if post['author'] != session['username']:
+                return jsonify({"error": "수정 권한이 없습니다."}), 403
+
+            # 2. 내용 업데이트
+            sql = "UPDATE posts SET title = %s, content = %s WHERE id = %s"
+            cursor.execute(sql, (new_title, new_content, post_id))
+        
+        conn.commit()
+        return jsonify({"message": "게시물이 수정되었습니다."}), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "서버 오류가 발생했습니다."}), 500
+    finally:
+        conn.close()
+
+
 # 8. 회원 탈퇴 (DELETE)
 @app.route('/api/withdraw', methods=['DELETE'])
 def withdraw():
